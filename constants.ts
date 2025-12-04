@@ -8,7 +8,7 @@ export const MENU_ITEMS: Product[] = [
     category: 'Food Platters',
     price: 4500,
     description: 'Vibrant, smoky Nigerian Jollof Rice served with peppered roasted chicken, coleslaw, and fried plantain.',
-    image: 'https://images.unsplash.com/photo-1604152135912-04a022e23696?auto=format&fit=crop&w=800&q=80'
+    image: 'https://images.unsplash.com/photo-1624640698114-1422799309c6?auto=format&fit=crop&w=800&q=80'
   },
   {
     id: 'fp-2',
