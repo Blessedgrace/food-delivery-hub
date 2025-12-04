@@ -20,22 +20,50 @@ export interface Review {
   date: string;
 }
 
-export type PageView = 'home' | 'menu' | 'cart' | 'checkout' | 'track' | 'order-success';
+export type PageView = 'home' | 'menu' | 'cart' | 'checkout' | 'track' | 'order-success' | 'history' | 'catering' | 'ai-assistant' | 'cake-designer';
 
-export type DeliveryType = 'city' | 'nearby' | 'far';
+// New Location System Types
+export interface BusStop {
+  name: string;
+  price: number;
+  time: string; // e.g., "30-45 mins"
+}
 
-export const DELIVERY_RATES: Record<DeliveryType, number> = {
-  city: 700,
-  nearby: 1200,
-  far: 2000
-};
+export interface LGA {
+  name: string;
+  stops: BusStop[];
+}
+
+export interface StateData {
+  name: string;
+  lgas: Record<string, LGA>;
+}
+
+// Nationwide Branch System Types
+export interface BranchMenuItem {
+  itemId: string; // References Product.id
+  price_range: string; // e.g. "2500-2800"
+}
+
+export interface Branch {
+  id: string;
+  chain: string;
+  branch_city: string;
+  branch_address: string;
+  menu: BranchMenuItem[];
+}
+
+export interface BranchesData {
+  [state: string]: {
+    [lga: string]: Branch[];
+  };
+}
 
 export const CATEGORIES = [
-  'Sea Food',
-  'Rice Meals',
-  'Fast Food',
-  'Soups',
-  'Swallows',
+  'Cakes',
+  'Food Platters',
   'Drinks',
-  'Snacks'
+  'Food Trays',
+  'Surprises',
+  'Catering'
 ] as const;

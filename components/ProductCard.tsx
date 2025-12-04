@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Star, MessageSquare, ChevronDown, ChevronUp, User, Send } from 'lucide-react';
 import { Product, Review } from '../types';
 import { useCart } from '../context/CartContext';
+import { useLocation } from '../context/LocationContext';
+import { BRANCHES_DATA } from '../constants';
 
 interface ProductCardProps {
   product: Product;
@@ -9,6 +11,7 @@ interface ProductCardProps {
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const { addToCart } = useCart();
+  const { selectedState, selectedLGA } = useLocation();
   
   // Review State
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -18,11 +21,26 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const [newName, setNewName] = useState('');
   const [newRating, setNewRating] = useState(5);
   const [newComment, setNewComment] = useState('');
+  const [priceRange, setPriceRange] = useState<string | null>(null);
+
+  // Determine price range based on location
+  useEffect(() => {
+    if (selectedState && selectedLGA && BRANCHES_DATA[selectedState] && BRANCHES_DATA[selectedState][selectedLGA]) {
+      const branches = BRANCHES_DATA[selectedState][selectedLGA];
+      const items = branches.flatMap(b => b.menu).filter(m => m.itemId === product.id);
+      
+      if (items.length > 0) {
+        setPriceRange(items[0].price_range);
+      }
+    } else {
+        setPriceRange(null);
+    }
+  }, [selectedState, selectedLGA, product.id]);
 
   // Load reviews from LocalStorage on mount
   useEffect(() => {
     try {
-      const stored = localStorage.getItem('naija_delight_reviews');
+      const stored = localStorage.getItem('anna_cakes_reviews');
       if (stored) {
         const allReviews: Review[] = JSON.parse(stored);
         const productReviews = allReviews.filter(r => r.productId === product.id);
@@ -41,7 +59,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     const review: Review = {
       id: Date.now().toString(),
       productId: product.id,
-      userName: newName.trim() || 'Foodie Lover',
+      userName: newName.trim() || 'Happy Customer',
       rating: newRating,
       text: newComment.trim(),
       date: new Date().toLocaleDateString()
@@ -52,9 +70,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
     // Save to LocalStorage
     try {
-      const stored = localStorage.getItem('naija_delight_reviews');
+      const stored = localStorage.getItem('anna_cakes_reviews');
       const allReviews: Review[] = stored ? JSON.parse(stored) : [];
-      localStorage.setItem('naija_delight_reviews', JSON.stringify([...allReviews, review]));
+      localStorage.setItem('anna_cakes_reviews', JSON.stringify([...allReviews, review]));
     } catch (error) {
       console.error("Failed to save review", error);
     }
@@ -70,49 +88,60 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     : null;
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden group flex flex-col h-full border border-gray-100">
+    <div className="bg-white rounded-2xl shadow-sm hover:shadow-2xl transition-all duration-300 overflow-hidden group flex flex-col h-full border border-gray-100 hover:border-brand-yellow">
       
       {/* Image Area */}
-      <div className="relative h-48 overflow-hidden">
+      <div className="relative h-64 overflow-hidden">
         <img 
           src={product.image} 
           alt={product.name} 
-          className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
+          className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
         />
-        <div className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-semibold text-brand-orange shadow-sm">
+        <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide text-brand-green shadow-md">
           {product.category}
         </div>
         
         {/* Rating Badge Overlay */}
         {averageRating && (
-           <div className="absolute bottom-2 right-2 bg-black/70 backdrop-blur-sm px-2 py-1 rounded-lg text-xs font-bold text-brand-yellow flex items-center gap-1 shadow-sm">
+           <div className="absolute bottom-3 right-3 bg-black/80 backdrop-blur-sm px-2 py-1 rounded-lg text-xs font-bold text-brand-yellow flex items-center gap-1 shadow-md">
              <Star size={12} fill="#FACC15" /> {averageRating} ({reviews.length})
            </div>
         )}
       </div>
       
       {/* Card Content */}
-      <div className="p-4 flex flex-col flex-grow">
+      <div className="p-5 flex flex-col flex-grow relative">
         <div className="flex justify-between items-start mb-2">
-          <h3 className="font-bold text-lg text-gray-800 line-clamp-1">{product.name}</h3>
-          <span className="font-bold text-brand-orange">₦{product.price.toLocaleString()}</span>
+          <h3 className="font-bold text-lg text-gray-800 line-clamp-2 leading-tight">{product.name}</h3>
         </div>
         
-        <p className="text-gray-500 text-sm mb-4 line-clamp-2 flex-grow">{product.description}</p>
+        {/* Price Display */}
+        <div className="mb-2">
+           {priceRange ? (
+             <div className="flex flex-col">
+                <span className="font-extrabold text-xl text-brand-green">{priceRange}</span>
+                <span className="text-[10px] text-gray-400">Depends on size/location</span>
+             </div>
+           ) : (
+             <span className="font-extrabold text-xl text-brand-green">₦{product.price.toLocaleString()}</span>
+           )}
+        </div>
+        
+        <p className="text-gray-500 text-sm mb-5 line-clamp-2 flex-grow leading-relaxed">{product.description}</p>
         
         <div className="space-y-3 mt-auto">
           <button 
             onClick={() => addToCart(product)}
-            className="w-full bg-brand-orange hover:bg-orange-600 text-white font-medium py-2.5 rounded-xl flex items-center justify-center gap-2 transition-colors active:scale-95 transform shadow-md"
+            className="w-full bg-brand-green hover:bg-green-800 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors active:scale-95 transform shadow-lg shadow-green-100"
           >
-            <Plus size={18} />
+            <Plus size={20} />
             Add to Cart
           </button>
 
           {/* Toggle Reviews */}
           <button 
             onClick={() => setShowReviews(!showReviews)}
-            className="w-full flex items-center justify-center gap-2 text-xs font-medium text-gray-500 hover:text-brand-orange transition-colors py-1"
+            className="w-full flex items-center justify-center gap-2 text-xs font-medium text-gray-400 hover:text-brand-yellow transition-colors py-1"
           >
             {showReviews ? (
               <>Hide Reviews <ChevronUp size={14} /></>
@@ -129,7 +158,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
       {/* Expandable Review Section */}
       {showReviews && (
-        <div className="border-t border-gray-100 bg-gray-50 p-4 animate-in slide-in-from-top-2 duration-200">
+        <div className="border-t border-gray-100 bg-brand-lightgreen/20 p-4 animate-in slide-in-from-top-2 duration-200">
           
           {/* Add Review Form */}
           <form onSubmit={handleSubmitReview} className="mb-6 space-y-3">
@@ -157,7 +186,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               placeholder="Your Name (Optional)"
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
-              className="w-full p-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-brand-orange bg-white"
+              className="w-full p-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-brand-green bg-white"
             />
             
             <div className="flex gap-2">
@@ -167,11 +196,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 placeholder="Share your thoughts..."
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
-                className="flex-grow p-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-brand-orange bg-white"
+                className="flex-grow p-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-brand-green bg-white"
               />
               <button 
                 type="submit"
-                className="bg-brand-orange text-white p-2 rounded-lg hover:bg-orange-600 transition-colors flex-shrink-0"
+                className="bg-brand-green text-white p-2 rounded-lg hover:bg-green-800 transition-colors flex-shrink-0"
               >
                 <Send size={18} />
               </button>
@@ -185,8 +214,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 <div key={review.id} className="bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
                   <div className="flex justify-between items-start mb-1">
                     <div className="flex items-center gap-1.5">
-                      <div className="bg-orange-100 p-1 rounded-full">
-                        <User size={10} className="text-brand-orange" />
+                      <div className="bg-yellow-100 p-1 rounded-full">
+                        <User size={10} className="text-brand-green" />
                       </div>
                       <span className="font-bold text-xs text-gray-800">{review.userName}</span>
                     </div>
